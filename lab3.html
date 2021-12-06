@@ -1,0 +1,54 @@
+<HTML>
+<BODY>
+<canvas id="lab03" width="500" height="400" style="border:1px solid red">
+</canvas>
+<script>
+        function Line(idata, x1, y1, x2, y2) {
+            var dx = Math.abs(x2 - x1);
+            var dy = Math.abs(y2 - y1);
+            var sx = (x1 < x2) ? 1 : -1;
+            var sy = (y1 < y2) ? 1 : -1;
+            var err = dx - dy;
+            var pw = 2;
+            
+            while (!((x1 == x2) && (y1 == y2))) {
+                idata.data[(x1 + y1 * idata.width) * 4 + 3] = 255;
+                idata.data[(x1 + (y1 + 1) * idata.width) * 4 + 3] = 255;
+
+                var tempErr = err << 1;
+                if (tempErr > -dy) {
+                    err -= dy;
+                    x1 += sx;
+                }
+                if (tempErr < dx) {
+                    err += dx;
+                    y1 += sy;
+                }
+            }
+        }
+</script>
+
+<script>
+        var canvas = document.getElementById("lab03");
+        var ctx = canvas.getContext("2d");
+
+        var flag = 0;
+        var idata = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        console.log(idata);
+        canvas.addEventListener("click", function(event){
+                        if (!flag) {
+                                x0 = event.offsetX;
+                                y0 = event.offsetY;
+                                flag = 1;
+                        } else {
+                                x1 = event.offsetX;
+                                y1 = event.offsetY;
+                                Line(idata, x0, y0, x1, y1);
+                                ctx.putImageData(idata, 0, 0);
+                                flag = 0;
+                        }
+                });
+
+</script>
+</BODY>
+</HTML>
