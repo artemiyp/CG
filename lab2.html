@@ -1,0 +1,67 @@
+<HTML>
+    <BODY>
+    <canvas id="lab02_1"  width="500" height="400" style="border:1px solid black;">
+    </canvas>
+    <canvas id="lab02_2" width="500" height="400" style="border:1px solid black;">
+    </canvas>
+    <script>
+        
+        var canvas = document.getElementById('lab02_1');
+        var ctx = canvas.getContext('2d');
+        var idata = ctx.createImageData(canvas.width, canvas.height);
+
+        var canvas_c = document.getElementById("lab02_2");
+        var ctx_c = canvas_c.getContext("2d");
+        var idata_c = ctx_c.createImageData(canvas_c.width, canvas_c.height);
+        
+        base_image = new Image;
+        base_image.src = 'D:\\lena.jpg';
+ 
+        base_image.onload = function() {               
+                ctx.drawImage(base_image, 0, 0, canvas.width, canvas.height);
+                idata = ctx.getImageData(0, 0, canvas.width, canvas.height);                       
+                
+                median_filter();
+        }
+        
+        base_image.crossOrigin="anonymous";
+        
+        function sortCompare(a, b) 
+        {
+                return a > b ? 1 : b > a ? -1 : 0;
+        }
+
+        function getMedianValueArea(i, j, channel) 
+        {
+                var values = new Array(9);    
+                var idx = 0;
+
+                for (let k = i - 1; k <= i + 1; k++) {
+                        for (let m = j - 1; m <= j + 1; ++m) {
+                                values[idx] = idata.data[(k * canvas.width + m) * 4 + channel];
+                                idx = idx + 1;
+                        }
+                }
+                                
+                values.sort(sortCompare);
+                
+                return values[4];
+        }
+
+        function median_filter()
+        {
+                for (let i = 1; i < canvas.height - 1; i++) {
+                        for (let j = 1; j < canvas.width - 1; j++) {
+                                for (let channel = 0; channel < 4; channel++) {
+                                        idata_c.data[(i*canvas_c.width+j) * 4 + channel] = getMedianValueArea(i, j, channel);
+                                }
+                        }
+                }
+                
+                ctx_c.putImageData(idata_c, 0, 0);
+        }
+
+        
+    </script>
+    </BODY>
+    </HTML>
