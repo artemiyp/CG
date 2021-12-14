@@ -1,0 +1,113 @@
+<HTML>
+    <BODY>
+    <canvas id="lab5" width="500" height="400">
+    </canvas>
+    <script>
+
+        var canvas = document.getElementById("lab5");
+        var ctx = canvas.getContext("2d");
+
+        let points = new Array();
+        let line = new Array();
+        let isPolygonMode = true;
+
+        function drawLine(x0, y0, x1, y1) {
+            var dy = Math.abs(y1-y0);
+            var dx = Math.abs(x1-x0);
+            var dmax = Math.max(dx, dy);
+            var dmin = Math.min(dx, dy);
+            var xdir = 1;
+            if (x1<x0) xdir = -1;	
+            var ydir = 1;
+            if (y1<y0) ydir = -1;
+            var eps = 0;
+            var s = 1;
+            var k=2*dmin;
+            if (dy<=dx) {
+                var y = y0;
+                for (var x=x0; x*xdir<=x1*xdir; x+=xdir) {
+                    ctx.fillRect(x*s, y*s, 1*s, 1*s);
+                    eps = eps+k;
+                    if (eps>dmax) {
+                        y+=ydir;
+                        eps = eps - 2*dmax;
+                    }	
+                } 
+            } else {
+                var x = x0;
+                for (var y=y0; y*ydir<=y1*ydir; y+=ydir) {
+                    ctx.fillRect(x*s, y*s, 1*s, 1*s);
+                    eps = eps+k;
+                    if (eps>dmax) {
+                        x+=xdir;
+                        eps = eps - 2*dmax;
+                    }	
+                } 
+            }		
+	    }
+
+    function drawPoligonMode() {
+        points.push({x: event.offsetX, y: event.offsetY});
+        if (points.length >= 2) {
+            let p1 = points[points.length - 1];
+            let p2 = points[points.length - 2];
+            drawLine(p1.x, p1.y, p2.x, p2.y);
+        }
+    }
+
+    function drawIntersecLine() {
+        line.push(event.offsetX);
+        line.push(event.offsetY);
+        if (line.length % 4 === 0) {
+            drawLine(line[line.length - 4], line[line.length - 3], line[line.length - 2], line[line.length - 1]);
+            clipping(line[line.length - 4], line[line.length - 3], line[line.length - 2], line[line.length - 1]);
+        }
+    }
+
+        function clipping(xl1, yl1, xl2, yl2) {
+            let tmin = 1.1;
+            let tmax = -0.1;
+            let imin;
+            let imax;
+
+            for (let i = 0; i < points.length - 1; i++) {
+                let t = ((yl1 - yl2) * (points[i].x - xl1) + (xl2 - xl1) * (points[i].y - yl1)) / 
+                    ((points[i + 1].x - points[i].x) * (yl2 - yl1) + (points[i + 1].y - points[i].y) * (xl1 - xl2))
+                if (t <= 1 && t >= 0) {
+                    if (t < tmin) {
+                        tmin = t;
+                        imin = i;
+                    }
+                    if (t > tmax) {
+                        tmax = t;
+                        imax = i;
+                    }
+                }
+            }
+
+            let xstart = (points[imin + 1].x - points[imin].x) * tmin + points[imin].x;
+            let ystart = (points[imin + 1].y - points[imin].y) * tmin + points[imin].y;
+
+            let xend = (points[imax + 1].x - points[imax].x) * tmax + points[imax].x;
+            let yend = (points[imax + 1].y - points[imax].y) * tmax + points[imax].y;
+
+            ctx.fillStyle = "Red";
+            drawLine(xstart, ystart, xend, yend);
+            ctx.fillStyle = "#000000";
+        }
+
+    canvas.addEventListener("click", function (event) {
+        (isPolygonMode) ? drawPoligonMode() : drawIntersecLine();
+    });
+
+    document.addEventListener("keypress", function () {
+        isPolygonMode = false;
+        let p1 = points[points.length - 1];
+        let p2 = points[0];
+        points.push({x: p2.x, y: p2.y});
+        drawLine(p1.x, p1.y, p2.x, p2.y);
+    });
+    
+    </script>
+    </BODY>
+    </HTML>
