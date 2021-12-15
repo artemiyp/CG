@@ -1,0 +1,117 @@
+<html>
+
+<body>
+<h2 id="construct">Press Enter to fill poligon</h2>
+<canvas id='lab7' height='500' width='500'>
+</canvas>
+
+<script>
+
+    let canvas = document.getElementById('lab7');
+    let ctx = canvas.getContext('2d');
+
+    class Point{
+        constructor(x, y) {
+            this.x = x;
+            this.y = y;
+        }
+    }
+
+    function drawLine(x0, y0, x1, y1) {
+        var dy = Math.abs(y1-y0);
+        var dx = Math.abs(x1-x0);
+        var dmax = Math.max(dx, dy);
+        var dmin = Math.min(dx, dy);
+        var xdir = 1;
+        if (x1<x0) xdir = -1;	
+        var ydir = 1;
+        if (y1<y0) ydir = -1;
+        var eps = 0;
+        var s = 1;
+        var k=2*dmin;
+        if (dy<=dx) {
+            var y = y0;
+            for (var x=x0; x*xdir<=x1*xdir; x+=xdir) {
+                ctx.fillRect(x*s, y*s, 1*s, 1*s);
+                eps = eps+k;
+                if (eps>dmax) {
+                    y+=ydir;
+                    eps = eps - 2*dmax;
+                }	
+            } 
+        } else {
+            var x = x0;
+            for (var y=y0; y*ydir<=y1*ydir; y+=ydir) {
+                ctx.fillRect(x*s, y*s, 1*s, 1*s);
+                eps = eps+k;
+                if (eps>dmax) {
+                    x+=xdir;
+                    eps = eps - 2*dmax;
+                }	
+            } 
+        }		
+    }
+
+    function fillPolygon(ctx, points) {
+        let maxy = points.reduce((prev, current) => (prev.y > current.y) ? prev : current).y;
+        let miny = points.reduce((prev, current) => (prev.y < current.y) ? prev : current).y;
+        
+        console.log(maxy, miny);
+        let yarray = [];
+        for (let i = 0; i < points.length-1; ++i) {
+            let hi = 0, lo = 0;
+            
+            if (points[i].y == points[i + 1].y)
+                continue;
+            
+            if (points[i].y > points[i + 1].y) {
+                hi = i;
+                lo = i + 1;
+            } else {
+                hi = i + 1;
+                lo = i;
+            } 
+
+            let k = (points[hi].y - points[lo].y) / (points[hi].x - points[lo].x);
+
+            for (let j = points[lo].y; j < points[hi].y; ++j) {
+                if (!Array.isArray(yarray[j]) ) {
+				    yarray[j] = new Array();
+			    }
+                yarray[j].push((j - points[lo].y) / k + points[lo].x);
+            }
+        }
+
+        for (let y = miny; y < maxy; y++) {
+            let xarray = yarray[y].sort(function (a, b) {
+                return a - b;
+            });
+            for (let j = 0; j < xarray.length / 2; ++j) {
+                for (let k = xarray[j * 2]; k < xarray[j * 2 + 1]; k++) {
+                    ctx.fillRect(k, y, 1, 1);
+                }
+            }
+        }
+    }
+
+    var points = [];
+    canvas.addEventListener('click', function (e) {
+        let idx = points.length;
+        points[idx] = new Point(e.offsetX, e.offsetY);
+        ctx.fillRect(e.offsetX, e.offsetY, 1, 1);
+        if (idx + 1 >= 2) {
+            drawLine(points[idx - 1].x, points[idx - 1].y, points[idx].x, points[idx].y)
+        }
+    });
+
+    document.addEventListener("keydown", function (event) {
+        if (event.keyCode == 13) {
+            fillPolygon(ctx, points);
+            points = [];
+        }        
+    });
+
+</script>
+
+</body>
+</html>
