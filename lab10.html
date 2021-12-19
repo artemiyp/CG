@@ -1,0 +1,114 @@
+<html>
+<body>
+<h2 id="construct">Set three points and press Enter</h2>
+<canvas id='lab8' width='500' height='500' style="border:1px solid"> </canvas>
+<p>Rotate curve clockwise</p>
+<input type="Angle" id="angle"/>
+<input type="button" id="btn" value="Rotate">
+
+<script>
+    let canvas=document.getElementById('lab8');
+    let ctx = canvas.getContext('2d');
+    
+    class Point {
+        constructor(x, y) {
+            this.x = x;
+            this.y = y;
+        }
+    }
+
+    function drawLine(x0, y0, x1, y1) {
+        var dy = Math.abs(y1-y0);
+        var dx = Math.abs(x1-x0);
+        var dmax = Math.max(dx, dy);
+        var dmin = Math.min(dx, dy);
+        var xdir = 1;
+        if (x1<x0) xdir = -1;	
+        var ydir = 1;
+        if (y1<y0) ydir = -1;
+        var eps = 0;
+        var s = 1;
+        var k=2*dmin;
+        if (dy<=dx) {
+            var y = y0;
+            for (var x=x0; x*xdir<=x1*xdir; x+=xdir) {
+                ctx.fillRect(x*s, y*s, 1*s, 1*s);
+                eps = eps+k;
+                if (eps>dmax) {
+                    y+=ydir;
+                    eps = eps - 2*dmax;
+                }	
+            } 
+        } else {
+            var x = x0;
+            for (var y=y0; y*ydir<=y1*ydir; y+=ydir) {
+                ctx.fillRect(x*s, y*s, 1*s, 1*s);
+                eps = eps+k;
+                if (eps>dmax) {
+                    x+=xdir;
+                    eps = eps - 2*dmax;
+                }	
+            } 
+        }		
+    }
+
+    points = []
+    canvas.addEventListener('click', function (e) {
+        let idx = points.length;
+        points[idx] = new Point(e.offsetX, e.offsetY);
+        ctx.fillRect(e.offsetX, e.offsetY, 1, 1);
+        if (idx + 1 >= 2) {
+            drawLine(points[idx - 1].x, points[idx - 1].y, points[idx].x, points[idx].y)
+        }
+    });
+
+    function drawBezierCurve(point1, point2, point3) {
+        let t = 0;
+        setTimeout(function () { 
+            while (t < 1) {
+                let tempPoint1 = new Point( (1 - t) * point1.x + t * point2.x, (1 - t) * point1.y + t * point2.y );
+                let tempPoint2 = new Point( (1 - t) * point2.x + t * point3.x, (1 - t) * point2.y + t * point3.y );    
+                let pointToDraw = new Point( (1 - t) * tempPoint1.x + t * tempPoint2.x, (1 - t) * tempPoint1.y + t * tempPoint2.y );
+        
+                ctx.fillStyle = "RED";
+                ctx.beginPath();
+                ctx.arc(pointToDraw.x, pointToDraw.y, 1, 0, Math.PI * 2, true);
+                ctx.fill();
+
+                t = t + 0.005; 
+            }
+        }, 100);
+    }
+
+    function rotate(angle) {
+        let anglePerRadian = (angle * 3.14) / 180;
+        let cosAngle = Math.cos(anglePerRadian);
+        let sinAngle = Math.sin(anglePerRadian);
+        let centreX = canvas.width  / 2;
+        let centreY = canvas.height / 2;
+
+        for (let i = 0; i < 3; ++i) {
+            let tempX = points[i].x - centreX;
+            let tempY = points[i].y - centreY;
+            points[i].x = parseInt(tempX * cosAngle - tempY * sinAngle) + centreX;
+            points[i].y = parseInt(tempX * sinAngle + tempY * cosAngle) + centreY;
+        }
+        
+        ctx.clearRect( 0 , 0 , canvas.width , canvas.height);
+        ctx.fillStyle = "Black";
+        drawLine(points[0].x, points[0].y, points[1].x, points[1].y)
+        drawLine(points[1].x, points[1].y, points[2].x, points[2].y)
+        drawBezierCurve(points[0], points[1], points[2]);
+    }
+
+    document.addEventListener("keydown", function (event) {
+        if (event.keyCode == 13) {
+            drawBezierCurve(points[0], points[1], points[2]);
+        }        
+    });
+
+    document.getElementById("btn").addEventListener("click", function(event){rotate(document.getElementById("angle").value)});
+
+</script>
+</body>
+</html>
